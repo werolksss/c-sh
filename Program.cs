@@ -1,156 +1,147 @@
 ﻿using System;
+using System.IO;
 
-namespace BankAccountApp
+class SchetDlyaOplaty
 {
-    // искл нев суммы
-    class InvalidAmountException : Exception
+    public static bool SohranyatVychislyaemyePolya { get; set; }
+
+// обычные поля
+    public double OplataZaDen;
+    public int KolichestvoDney;
+    public double ShtrafZaDen;
+    public int KolichestvoDneyZaderzhki;
+
+// вычисляемые поля
+    public double SummaBezShtrafa;
+    public double Shtraf;
+    public double ObshayaSumma;
+
+    public SchetDlyaOplaty()
     {
-        public InvalidAmountException(string message)
-            : base(message)
-        {
-        }
     }
-    // искл недостатка средств
-    class InsufficientFundsException : Exception
+
+    public SchetDlyaOplaty(double oplataZaDen, int kolichestvoDney, double shtrafZaDen, int kolichestvoDneyZaderzhki)
     {
-        public InsufficientFundsException(string message)
-            : base(message)
-        {
-        }
+        OplataZaDen = oplataZaDen;
+        KolichestvoDney = kolichestvoDney;
+        ShtrafZaDen = shtrafZaDen;
+        KolichestvoDneyZaderzhki = kolichestvoDneyZaderzhki;
+
+        Raschitat();
     }
-    // банковский счет
-    class BankAccount
+
+// метод считает вычисляемые поля
+    public void Raschitat()
     {
-        public string AccountNumber { get; set; }
-        public decimal Balance { get; set; }
-
-        //конструктор
-        public BankAccount(decimal startBalance = 0)
-        {
-            if (startBalance < 0)
-            {
-                throw new InvalidAmountException(
-                    "Начальный баланс не может быть отрицательным");
-            }
-
-            Random rnd = new Random();
-
-            AccountNumber = "ACCT-" + rnd.Next(1000, 9999);
-
-            Balance = startBalance;
-        }
-
-        // пополнение
-        public void Deposit(decimal amount)
-        {
-            if (amount <= 0)
-            {
-                throw new InvalidAmountException(
-                    "Сумма пополнения должна быть положительной");
-            }
-
-            Balance += amount;
-        }
-        //снятие
-        public void Withdraw(decimal amount)
-        {
-            if (amount <= 0)
-            {
-                throw new InvalidAmountException(
-                    "Сумма снятия должна быть положительной");
-            }
-
-            if (amount > Balance)
-            {
-                throw new InsufficientFundsException(
-                    "Недостаточно средств на счете");
-            }
-
-            Balance -= amount;
-        }
+        SummaBezShtrafa = OplataZaDen * KolichestvoDney;
+        Shtraf = ShtrafZaDen * KolichestvoDneyZaderzhki;
+        ObshayaSumma = SummaBezShtrafa + Shtraf;
     }
-    class Program
+
+// вывод информации
+    public void Pokazat()
     {
-        static void Main(string[] args)
+        Console.WriteLine("Оплата за день: " + OplataZaDen);
+        Console.WriteLine("Количество дней: " + KolichestvoDney);
+        Console.WriteLine("Штраф за один день задержки: " + ShtrafZaDen);
+        Console.WriteLine("Количество дней задержки: " + KolichestvoDneyZaderzhki);
+        Console.WriteLine("Сумма без штрафа: " + SummaBezShtrafa);
+        Console.WriteLine("Штраф: " + Shtraf);
+        Console.WriteLine("Общая сумма к оплате: " + ObshayaSumma);
+    }
+
+// сохранение в файл
+    public void SohranitVFayl(string fileName)
+    {
+        using (StreamWriter writer = new StreamWriter(fileName))
         {
-            try
+            writer.WriteLine(OplataZaDen);
+            writer.WriteLine(KolichestvoDney);
+            writer.WriteLine(ShtrafZaDen);
+            writer.WriteLine(KolichestvoDneyZaderzhki);
+
+            if (SohranyatVychislyaemyePolya == true)
             {
-                BankAccount account = new BankAccount();
-
-                bool work = true;
-
-                while (work)
-                {
-                    Console.WriteLine();
-                    Console.WriteLine($"Номер счета: {account.AccountNumber}");
-                    Console.WriteLine("1 - Пополнить");
-                    Console.WriteLine("2 - Снять");
-                    Console.WriteLine("3 - Показать баланс");
-                    Console.WriteLine("4 - Выход");
-
-                    Console.Write("Выберите действие: ");
-
-                    int choice = Convert.ToInt32(Console.ReadLine());
-
-                    try
-                    {
-                        switch (choice)
-                        {
-                            case 1:
-                                Console.Write("Введите сумму пополнения: ");
-                                decimal add = Convert.ToDecimal(Console.ReadLine());
-
-                                account.Deposit(add);
-
-                                Console.WriteLine("Счет успешно пополнен");
-                                break;
-
-                            case 2:
-                                Console.Write("Введите сумму снятия: ");
-                                decimal minus = Convert.ToDecimal(Console.ReadLine());
-
-                                account.Withdraw(minus);
-
-                                Console.WriteLine("Деньги успешно сняты");
-                                break;
-
-                            case 3:
-                                Console.WriteLine(
-                                    $"Баланс: {account.Balance:F2}");
-                                break;
-
-                            case 4:
-                                work = false;
-                                break;
-
-                            default:
-                                Console.WriteLine("Неверный выбор");
-                                break;
-                        }
-                    }
-                    catch (InvalidAmountException ex)
-                    {
-                        Console.WriteLine($"Ошибка: {ex.Message}");
-                    }
-                    catch (InsufficientFundsException ex)
-                    {
-                        Console.WriteLine($"Ошибка: {ex.Message}");
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Общая ошибка: {ex.Message}");
-                    }
-
-                    Console.WriteLine(
-                        $"Текущий баланс: {account.Balance:F2}");
-                }
+                writer.WriteLine(SummaBezShtrafa);
+                writer.WriteLine(Shtraf);
+                writer.WriteLine(ObshayaSumma);
             }
-            catch (InvalidAmountException ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
-
-            Console.ReadKey();
         }
+
+        Console.WriteLine("Данные сохранены в файл.");
+    }
+
+// чтение из файла
+    public static SchetDlyaOplaty ZagruzitIzFayla(string fileName)
+    {
+        if (!File.Exists(fileName))
+        {
+            Console.WriteLine("Файл не найден.");
+            return null;
+        }
+
+        string[] lines = File.ReadAllLines(fileName);
+
+        SchetDlyaOplaty schet = new SchetDlyaOplaty();
+
+        schet.OplataZaDen = Convert.ToDouble(lines[0]);
+        schet.KolichestvoDney = Convert.ToInt32(lines[1]);
+        schet.ShtrafZaDen = Convert.ToDouble(lines[2]);
+        schet.KolichestvoDneyZaderzhki = Convert.ToInt32(lines[3]);
+
+        if (SohranyatVychislyaemyePolya == true && lines.Length >= 7)
+        {
+            schet.SummaBezShtrafa = Convert.ToDouble(lines[4]);
+            schet.Shtraf = Convert.ToDouble(lines[5]);
+            schet.ObshayaSumma = Convert.ToDouble(lines[6]);
+        }
+        else
+        {
+            schet.Raschitat();
+        }
+
+        Console.WriteLine("Данные загружены из файла.");
+        return schet;
+    }
+}
+
+class Program
+{
+    static void Main()
+    {
+        string fileName = "schet.txt";
+
+        SchetDlyaOplaty schet = new SchetDlyaOplaty(1000, 10, 200, 3);
+
+        Console.WriteLine("Исходный счет:");
+        schet.Pokazat();
+
+        Console.WriteLine();
+
+    // первый вариант: сохраняем все поля
+        SchetDlyaOplaty.SohranyatVychislyaemyePolya = true;
+
+        Console.WriteLine("Сохранение с вычисляемыми полями:");
+        schet.SohranitVFayl(fileName);
+
+        Console.WriteLine();
+
+        SchetDlyaOplaty schet1 = SchetDlyaOplaty.ZagruzitIzFayla(fileName);
+
+        Console.WriteLine("Считанный счет из файла:");
+        schet1.Pokazat();
+
+    // второй вариант: вычисляемые поля не сохраняются
+        SchetDlyaOplaty.SohranyatVychislyaemyePolya = false;
+
+        Console.WriteLine("Сохранение без вычисляемых полей:");
+        schet.SohranitVFayl(fileName);
+
+        Console.WriteLine();
+
+        SchetDlyaOplaty schet2 = SchetDlyaOplaty.ZagruzitIzFayla(fileName);
+
+        Console.WriteLine("Считанный счет из файла:");
+        schet2.Pokazat();
     }
 }
