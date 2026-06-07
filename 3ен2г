@@ -1,0 +1,136 @@
+using System;
+using System.Xml;
+
+namespace XML_Zakazy
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            SozdatXML();
+            Console.WriteLine("XML файл создан.\n");
+
+            Console.WriteLine("Чтение через XmlDocument");
+            ChitatXmlDocument();
+
+            Console.WriteLine("\nЧтение через XmlTextReader");
+            ChitatXmlTextReader();
+        }
+
+        static void SozdatXML()
+        {
+            XmlTextWriter writer = null;
+
+            try
+            {
+                writer = new XmlTextWriter("Orders.xml",
+                    System.Text.Encoding.UTF8);
+
+                writer.Formatting = Formatting.Indented;
+
+                writer.WriteStartDocument();
+                writer.WriteStartElement("Orders");
+
+                // Заказ №1
+                writer.WriteStartElement("Order");
+                writer.WriteAttributeString("Number", "101");
+
+                writer.WriteStartElement("Product");
+                writer.WriteElementString("Name", "Ноутбук");
+                writer.WriteElementString("Price", "75000");
+                writer.WriteElementString("Quantity", "1");
+                writer.WriteEndElement();
+
+                writer.WriteStartElement("Product");
+                writer.WriteElementString("Name", "Мышка");
+                writer.WriteElementString("Price", "1500");
+                writer.WriteElementString("Quantity", "2");
+                writer.WriteEndElement();
+
+                writer.WriteEndElement();
+
+                // Заказ №2
+                writer.WriteStartElement("Order");
+                writer.WriteAttributeString("Number", "102");
+
+                writer.WriteStartElement("Product");
+                writer.WriteElementString("Name", "Клавиатура");
+                writer.WriteElementString("Price", "3500");
+                writer.WriteElementString("Quantity", "1");
+                writer.WriteEndElement();
+
+                writer.WriteEndElement();
+
+                writer.WriteEndElement();
+                writer.WriteEndDocument();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            finally
+            {
+                if (writer != null)
+                    writer.Close();
+            }
+        }
+
+        static void ChitatXmlDocument()
+        {
+            try
+            {
+                XmlDocument doc = new XmlDocument();
+                doc.Load("Orders.xml");
+
+                XmlNodeList orders = doc.GetElementsByTagName("Order");
+
+                foreach (XmlNode order in orders)
+                {
+                    Console.WriteLine($"Заказ №{order.Attributes["Number"].Value}");
+
+                    foreach (XmlNode product in order.ChildNodes)
+                    {
+                        Console.WriteLine(
+                            $"Товар: {product["Name"].InnerText}, " +
+                            $"Цена: {product["Price"].InnerText}, " +
+                            $"Количество: {product["Quantity"].InnerText}");
+                    }
+
+                    Console.WriteLine();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+        static void ChitatXmlTextReader()
+        {
+            XmlTextReader reader = null;
+
+            try
+            {
+                reader = new XmlTextReader("Orders.xml");
+
+                while (reader.Read())
+                {
+                    if (reader.NodeType == XmlNodeType.Element)
+                    {
+                        Console.WriteLine(
+                            $"Элемент: {reader.Name} Значение: {reader.Value}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            finally
+            {
+                if (reader != null)
+                    reader.Close();
+            }
+        }
+    }
+}
