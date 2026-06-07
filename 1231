@@ -1,0 +1,48 @@
+using System;
+using System.Runtime.InteropServices;
+
+namespace MonitorDiagonal
+{
+    class Program
+    {
+        [DllImport("user32.dll")]
+        static extern IntPtr GetDC(IntPtr hWnd);
+
+        [DllImport("gdi32.dll")]
+        static extern int GetDeviceCaps(IntPtr hdc, int nIndex);
+
+        [DllImport("user32.dll")]
+        static extern int ReleaseDC(IntPtr hWnd, IntPtr hDC);
+
+        const int HORZSIZE = 4; // ширина экрана в мм
+        const int VERTSIZE = 6; // высота экрана в мм
+
+        static void Main(string[] args)
+        {
+            try
+            {
+                IntPtr hdc = GetDC(IntPtr.Zero);
+
+                int shirinaMm = GetDeviceCaps(hdc, HORZSIZE);
+                int vysotaMm = GetDeviceCaps(hdc, VERTSIZE);
+
+                ReleaseDC(IntPtr.Zero, hdc);
+
+                double diagonalMm = Math.Sqrt(
+                    shirinaMm * shirinaMm + vysotaMm * vysotaMm
+                );
+
+                double diagonalDuyms = diagonalMm / 25.4;
+
+                Console.WriteLine("Ширина монитора: " + shirinaMm + " мм");
+                Console.WriteLine("Высота монитора: " + vysotaMm + " мм");
+                Console.WriteLine("Диагональ монитора: " +
+                    Math.Round(diagonalDuyms, 1) + " дюймов");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Ошибка: " + ex.Message);
+            }
+        }
+    }
+}
